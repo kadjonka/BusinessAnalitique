@@ -1,1 +1,53 @@
+pip install streamlit
+import streamlit as st
+import pandas as pd
+import plotly.express as px
 
+# Charger les données
+data = pd.read_csv('data_dashboard_large.csv')
+
+# Titre de l'application
+st.title('Dashboard des Performances de Vente')
+
+# Section Résumé
+st.header('Résumé des KPI')
+total_ventes = data['Montant'].sum()
+nombre_transactions = data['ID_Client'].nunique()
+moyenne_transaction = data['Montant'].mean()
+satisfaction_moyenne = data['Satisfaction_Client'].mean()
+
+st.write(f'Total des ventes : {total_ventes:.2f} €')
+st.write(f'Nombre total de transactions : {nombre_transactions}')
+st.write(f'Montant moyen par transaction : {moyenne_transaction:.2f} €')
+st.write(f'Satisfaction client moyenne : {satisfaction_moyenne:.2f}')
+
+# Graphique des ventes quotidiennes
+data['Date_Transaction'] = pd.to_datetime(data['Date_Transaction'])
+ventes_journalieres = data.groupby(data['Date_Transaction'].dt.date)['Montant'].sum().reset_index()
+fig = px.line(ventes_journalieres, x='Date_Transaction', y='Montant', title='Ventes Quotidiennes')
+st.plotly_chart(fig)
+
+# Analyse par magasin
+st.header('Analyse par Magasin')
+ventes_par_magasin = data.groupby('Magasin')['Montant'].sum().reset_index()
+fig2 = px.pie(ventes_par_magasin, values='Montant', names='Magasin', title='Répartition des ventes par magasin')
+st.plotly_chart(fig2)
+
+# Analyse des catégories de produits
+st.header('Analyse des Catégories de Produits')
+quantites_par_categorie = data.groupby('Categorie_Produit')['Quantite'].sum().reset_index()
+fig3 = px.bar(quantites_par_categorie, x='Categorie_Produit', y='Quantite', title='Quantités Vendues par Catégorie')
+st.plotly_chart(fig3)
+
+# Analyse des modes de paiement
+st.header('Analyse des Modes de Paiement')
+utilisation_paiement = data['Mode_Paiement'].value_counts().reset_index()
+utilisation_paiement.columns = ['Mode_Paiement', 'Nombre_Transactions']
+fig4 = px.pie(utilisation_paiement, values='Nombre_Transactions', names='Mode_Paiement', title='Répartition des Transactions par Mode de Paiement')
+st.plotly_chart(fig4)
+
+# Analyse de la satisfaction client
+st.header('Analyse de la Satisfaction Client')
+satisfaction_par_magasin = data.groupby('Magasin')['Satisfaction_Client'].mean().reset_index()
+fig5 = px.bar(satisfaction_par_magasin, x='Magasin', y='Satisfaction_Client', title='Satisfaction Client par Magasin')
+st.plotly_chart(fig5)
